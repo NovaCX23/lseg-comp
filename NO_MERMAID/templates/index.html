@@ -254,9 +254,12 @@
     </style>
 </head>
 <body>
-    <header>
+        <header>
         <h1>⚡ Diagram Generator</h1>
-        <button class="clear-btn" onclick="clearHistory()">Clear History</button>
+        <div style="display: flex; gap: 8px;">
+            <button class="clear-btn" onclick="downloadSVG()">Download SVG</button>
+            <button class="clear-btn" onclick="clearHistory()">Clear History</button>
+        </div>
     </header>
     <main>
         <div class="sidebar">
@@ -347,12 +350,15 @@
         async function loadConversation(id) {
             try {
                 const res = await fetch(`/history/${id}`);
+                if (!res.ok) throw new Error('Not found');
                 const data = await res.json();
                 document.getElementById('query').value = data.query;
                 nodes = data.diagram.nodes || [];
                 connections = data.diagram.connections || [];
+                panOffset = { x: 0, y: 0 };
                 renderDiagram();
             } catch (e) {
+                console.error(e);
                 errorDiv.innerHTML = `<div class="error-msg">Failed to load: ${e.message}</div>`;
             }
         }
@@ -368,6 +374,18 @@
             } catch (e) {
                 errorDiv.innerHTML = `<div class="error-msg">Failed to clear: ${e.message}</div>`;
             }
+        }
+
+        function downloadSVG() {
+            if (nodes.length === 0) return;
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'diagram.svg';
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         function renderDiagram() {
@@ -394,7 +412,7 @@
             svg.appendChild(g);
 
             nodes.forEach((node) => {
-                const label = node.label || node.id;
+                const label = (node.label || node.id);
                 const width = Math.max(80, label.length * 9 + 20);
                 node.width = width;
                 node.height = 40;
@@ -404,11 +422,8 @@
                 nodeG.setAttribute('data-id', node.id);
                 nodeG.setAttribute('transform', `translate(${node.x}, ${node.y})`);
 
-                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                rect.setAttribute('width', width);
-                rect.setAttribute('height', 40);
-                rect.setAttribute('rx', 8);
-                rect.setAttribute('fill', node.color || '#4ecdc4');
+                const shape = createRect(width, 40, node.color || '#4ecdc4');
+                nodeG.appendChild(shape);
 
                 const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 text.setAttribute('x', width / 2);
@@ -416,12 +431,20 @@
                 text.setAttribute('text-anchor', 'middle');
                 text.textContent = label;
 
-                nodeG.appendChild(rect);
                 nodeG.appendChild(text);
                 g.appendChild(nodeG);
 
                 nodeG.addEventListener('mousedown', (e) => startDragNode(e, node));
             });
+
+            function createRect(w, h, color) {
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('width', w);
+                rect.setAttribute('height', h);
+                rect.setAttribute('rx', 8);
+                rect.setAttribute('fill', color);
+                return rect;
+            }
 
             connections.forEach((conn) => {
                 const fromNode = nodes.find(n => n.id === conn.from);
@@ -453,6 +476,20 @@
             const toCenterY = to.y + to.height / 2;
             const midX = (fromRight + toLeft) / 2;
             return `M ${fromRight} ${fromCenterY} C ${midX} ${fromCenterY} ${midX} ${toCenterY} ${toLeft} ${toCenterY}`;
+        }
+
+        function getNodeEdge(node, direction) {
+            const cx = node.x + node.width / 2;
+            const cy = node.y + node.height / 2;
+            if (direction === 'right') {
+                return { x: node.x + node.width, y: cy };
+            } else if (direction === 'left') {
+                return { x: node.x, y: cy };
+            } else if (direction === 'top') {
+                return { x: cx, y: node.y };
+            } else {
+                return { x: cx, y: node.y + node.height };
+            }
         }
 
         function getMidPoint(from, to) {
