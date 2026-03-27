@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagram Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #0d1117;
+            color: #c9d1d9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #161b22;
+            padding: 16px 24px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #58a6ff;
+            font-weight: 700;
+        }
+
+        .clear-btn {
+            background: transparent;
+            border: 1px solid #f85149;
+            color: #f85149;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .clear-btn:hover {
+            background: #f8514920;
+        }
+
+        main {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 65px);
+        }
+
+        .sidebar {
+            width: 30%;
+            min-width: 300px;
+            background: #161b22;
+            border-right: 1px solid #30363d;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+        }
+
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        textarea {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px;
+            color: #c9d1d9;
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+            height: 120px;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+
+        textarea::placeholder {
+            color: #8b949e;
+        }
+
+        .send-btn {
+            background: #58a6ff;
+            border: none;
+            color: #0d1117;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            background: #79b8ff;
+        }
+
+        .send-btn:disabled {
+            background: #30363d;
+            color: #8b949e;
+            cursor: not-allowed;
+        }
+
+        .history {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .history h2 {
+            font-size: 16px;
+            color: #8b949e;
+            margin-bottom: 12px;
+        }
+
+        .history-item {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            border-color: #58a6ff;
+        }
+
+        .history-query {
+            font-size: 14px;
+            color: #c9d1d9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-time {
+            font-size: 12px;
+            color: #8b949e;
+            margin-top: 4px;
+        }
+
+        .canvas-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #0d1117;
+        }
+
+        #diagram {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        #diagram:active {
+            cursor: grabbing;
+        }
+
+        .node {
+            cursor: move;
+            transition: filter 0.2s;
+        }
+
+        .node:hover {
+            filter: brightness(1.1);
+        }
+
+        .node rect {
+            stroke: #30363d;
+            stroke-width: 2;
+        }
+
+        .node text {
+            fill: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+
+        .connection {
+            stroke: #58a6ff;
+            stroke-width: 2.5;
+            fill: none;
+            opacity: 0.8;
+        }
+
+        .connection-label {
+            fill: #8b949e;
+            font-size: 12px;
+        }
+
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #8b949e;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .error-msg {
+            background: #f8514920;
+            border: 1px solid #f85149;
+            color: #f85149;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                min-width: auto;
+                height: 40%;
+                border-right: none;
+                border-bottom: 1px solid #30363d;
+            }
+            .canvas-area {
+                height: 60%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚡ Diagram Generator</h1>
+        <button class="clear-btn" onclick="clearHistory()">Clear History</button>
+    </header>
+    <main>
+        <div class="sidebar">
+            <div class="input-area">
+                <textarea id="query" placeholder="Describe your diagram... (e.g. 'flow of user login')"></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendQuery()">Generate Diagram</button>
+                <div id="error"></div>
+            </div>
+            <div class="history">
+                <h2>Conversation History</h2>
+                <div id="historyList"></div>
+            </div>
+        </div>
+        <div class="canvas-area">
+            <svg id="diagram"></svg>
+            <div class="empty-state" id="emptyState">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/>
+                </svg>
+                <p>Enter a description to generate a diagram</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let nodes = [];
+        let connections = [];
+        let dragNode = null;
+        let dragOffset = { x: 0, y: 0 };
+        let panOffset = { x: 0, y: 0 };
+        let isPanning = false;
+        let lastMousePos = { x: 0, y: 0 };
+
+        const svg = document.getElementById('diagram');
+        const emptyState = document.getElementById('emptyState');
+        const errorDiv = document.getElementById('error');
+        const sendBtn = document.getElementById('sendBtn');
+
+        async function sendQuery() {
+            const query = document.getElementById('query').value.trim();
+            if (!query) return;
+
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Generating...';
+            errorDiv.innerHTML = '';
+
+            try {
+                const res = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    errorDiv.innerHTML = `<div class="error-msg">${data.error}</div>`;
+                    return;
+                }
+
+                nodes = data.nodes || [];
+                connections = data.connections || [];
+                renderDiagram();
+                loadHistory();
+            } catch (e) {
+                errorDiv.innerHTML = `<div class="error-msg">Connection error: ${e.message}</div>`;
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Generate Diagram';
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/history');
+                const history = await res.json();
+                const list = document.getElementById('historyList');
+                list.innerHTML = history.map(h => `
+                    <div class="history-item" onclick="loadConversation(${h.id})">
+                        <div class="history-query">${escapeHtml(h.query)}</div>
+                        <div class="history-time">${new Date(h.created_at).toLocaleString()}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load history:', e);
+            }
+        }
+
+        async function loadConversation(id) {
+            try {
+                const res = await fetch(`/history/${id}`);
+                const data = await res.json();
+                document.getElementById('query').value = data.query;
+                nodes = data.diagram.nodes || [];
+                connections = data.diagram.connections || [];
+                renderDiagram();
+            } catch (e) {
+                errorDiv.innerHTML = `<div class="error-msg">Failed to load: ${e.message}</div>`;
+            }
+        }
+
+        async function clearHistory() {
+            if (!confirm('Clear all conversation history?')) return;
+            try {
+                await fetch('/clear', { method: 'POST' });
+                loadHistory();
+                nodes = [];
+                connections = [];
+                renderDiagram();
+            } catch (e) {
+                errorDiv.innerHTML = `<div class="error-msg">Failed to clear: ${e.message}</div>`;
+            }
+        }
+
+        function renderDiagram() {
+            svg.innerHTML = `<defs></defs>`;
+
+            if (nodes.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            emptyState.style.display = 'none';
+
+            nodes.forEach((node, i) => {
+                if (node.x === undefined) {
+                    const cols = Math.ceil(Math.sqrt(nodes.length));
+                    const row = Math.floor(i / cols);
+                    const col = i % cols;
+                    node.x = 80 + col * 220;
+                    node.y = 80 + row * 120;
+                }
+            });
+
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('transform', `translate(${panOffset.x}, ${panOffset.y})`);
+            svg.appendChild(g);
+
+            nodes.forEach((node) => {
+                const label = node.label || node.id;
+                const width = Math.max(80, label.length * 9 + 20);
+                node.width = width;
+                node.height = 40;
+
+                const nodeG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                nodeG.setAttribute('class', 'node');
+                nodeG.setAttribute('data-id', node.id);
+                nodeG.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('width', width);
+                rect.setAttribute('height', 40);
+                rect.setAttribute('rx', 8);
+                rect.setAttribute('fill', node.color || '#4ecdc4');
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', width / 2);
+                text.setAttribute('y', 25);
+                text.setAttribute('text-anchor', 'middle');
+                text.textContent = label;
+
+                nodeG.appendChild(rect);
+                nodeG.appendChild(text);
+                g.appendChild(nodeG);
+
+                nodeG.addEventListener('mousedown', (e) => startDragNode(e, node));
+            });
+
+            connections.forEach((conn) => {
+                const fromNode = nodes.find(n => n.id === conn.from);
+                const toNode = nodes.find(n => n.id === conn.to);
+                if (!fromNode || !toNode) return;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('class', 'connection');
+                path.setAttribute('d', getConnectionPath(fromNode, toNode));
+                g.appendChild(path);
+
+                if (conn.label) {
+                    const mid = getMidPoint(fromNode, toNode);
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('class', 'connection-label');
+                    text.setAttribute('x', mid.x);
+                    text.setAttribute('y', mid.y);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.textContent = conn.label;
+                    g.appendChild(text);
+                }
+            });
+        }
+
+        function getConnectionPath(from, to) {
+            const fromRight = from.x + from.width;
+            const fromCenterY = from.y + from.height / 2;
+            const toLeft = to.x;
+            const toCenterY = to.y + to.height / 2;
+            const midX = (fromRight + toLeft) / 2;
+            return `M ${fromRight} ${fromCenterY} C ${midX} ${fromCenterY} ${midX} ${toCenterY} ${toLeft} ${toCenterY}`;
+        }
+
+        function getMidPoint(from, to) {
+            return {
+                x: (from.x + from.width + to.x) / 2,
+                y: (from.y + from.height / 2 + to.y + to.height / 2) / 2
+            };
+        }
+
+        function startDragNode(e, node) {
+            e.stopPropagation();
+            dragNode = node;
+            const rect = svg.getBoundingClientRect();
+            dragOffset = {
+                x: e.clientX - rect.left - panOffset.x - (node.x || 0),
+                y: e.clientY - rect.top - panOffset.y - (node.y || 0)
+            };
+        }
+
+        function startPan(e) {
+            if (dragNode) return;
+            isPanning = true;
+            lastMousePos = { x: e.clientX, y: e.clientY };
+        }
+
+        function onMouseMove(e) {
+            if (dragNode) {
+                const rect = svg.getBoundingClientRect();
+                dragNode.x = e.clientX - rect.left - panOffset.x - dragOffset.x;
+                dragNode.y = e.clientY - rect.top - panOffset.y - dragOffset.y;
+                renderDiagram();
+            } else if (isPanning) {
+                panOffset.x += e.clientX - lastMousePos.x;
+                panOffset.y += e.clientY - lastMousePos.y;
+                lastMousePos = { x: e.clientX, y: e.clientY };
+                renderDiagram();
+            }
+        }
+
+        function onMouseUp() {
+            dragNode = null;
+            isPanning = false;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.getElementById('query').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendQuery();
+            }
+        });
+
+        svg.addEventListener('mousedown', startPan);
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        
+        loadHistory();
+    </script>
+</body>
+</html>
