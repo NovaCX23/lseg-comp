@@ -1,16 +1,11 @@
-model = " "
+""""""
 
-# XX_andrei_XX_YT_RO_2025
+# grigorebianca76@gmail.com
+# xhamanichristian@gmail.com
+# andrei12225@outlook.com
+# alexhancu49@gmail.com
 
 
-# bianca
-# am eu streamlit ✅
-
-
-# edi
-"""
-
-""" """"""
 # input limbaj natural o descriere a unei diagrame de orice fel iar llm ul sa produca diagrama ,
 # o sa existe typo uri, neclaritati in query si aplicatia trebuie sa acopere cazul asta
 # bonus pt elem inovative in aplicatie
@@ -19,7 +14,7 @@ model = " "
 # diagrama trebuie sa fie editabila!!!
 # corectitudine logica, acuratete tehnica
 
-# alex:)
+
 # https://www.eraser.io/ai/azure-diagram-generator
 # diagrama sa fie conforme promptului
 # input: prompt in limbaj natural, NU se modifica manual
@@ -29,12 +24,6 @@ model = " "
 # un email cu link catre repo si ss-uri/video-uri cu functionalitatea aplicatiei,
 # inclusiv raspunsurile la prompt=urile date de ei
 #       + putem demosntra chestiile extra prin ss-uri/video-uri extra
-
-
-# === victor ===
-
-
-# ==== chris
 
 
 # Cea mai eficientă structură este: 2 pe Frontend/Vizual, 2 pe AI/NLP, 1 pe Backend/Arhitectură și 1 pe Produs/QA/Demo.
