@@ -1,4 +1,4 @@
-# LSEG_LMAO
+# LLMO
 
 AI-powered diagram generator that converts natural language descriptions into Mermaid.js diagrams.
 
