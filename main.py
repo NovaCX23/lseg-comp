@@ -246,11 +246,12 @@ with st.sidebar:
 
     st.divider()
 
-    try:
-        sessions = get_all_sessions()
-    except Exception as e:
-        st.warning(f"Could not load history: {e}")
-        sessions = []
+    with st.spinner("Loading history..."):
+        try:
+            sessions = get_all_sessions()
+        except Exception as e:
+            st.warning(f"Could not load history: {e}")
+            sessions = []
     for sess in sessions:
         is_active = sess["id"] == st.session_state.current_session_id
         col1, col2 = st.columns([4, 1])
