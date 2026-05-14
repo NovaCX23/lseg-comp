@@ -409,6 +409,21 @@ classDef danger fill:#fee2e2,stroke:#ef4444,color:#7f1d1d,stroke-width:2px;
 
 
 # =========================
+# VALIDATION
+# =========================
+def looks_like_mermaid(text: str) -> bool:
+    DIAGRAM_TYPES = (
+        "flowchart", "graph", "sequenceDiagram", "classDiagram",
+        "erDiagram", "stateDiagram", "gantt", "pie", "journey",
+    )
+    for line in text.strip().split("\n"):
+        stripped = line.strip()
+        if stripped and not stripped.startswith("%%"):
+            return any(stripped.lower().startswith(d.lower()) for d in DIAGRAM_TYPES)
+    return False
+
+
+# =========================
 # RENDER
 # =========================
 def render_mermaid(mermaid_code, frame_height=600):
@@ -581,6 +596,11 @@ else:
                     st.rerun()
 
             st.markdown("### Previzualizare")
+            if not looks_like_mermaid(st.session_state.current_mermaid_code):
+                st.warning(
+                    "Output doesn't look like valid Mermaid. The model may have returned "
+                    "an explanation instead of code. Try regenerating or edit manually."
+                )
             render_mermaid(st.session_state.current_mermaid_code)
         else:
             st.info("👈 Scrie în chat ca să generăm prima diagramă.")
