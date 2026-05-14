@@ -2,7 +2,7 @@
 
 > Describe an architecture in plain language. Get a live Mermaid.js diagram in seconds.
 
-Built at the **LSEG Hackathon 2025** in ~3 hours. Polished afterwards.
+Built at the **LSEG Hackathon 2026** in ~3 hours. Polished afterwards.
 
 ---
 
@@ -99,6 +99,6 @@ Open http://localhost:8501 in your browser.
 | Persistence | SQLite |
 | Language | Python 3.9+ |
 
-## Built at LSEG Hackathon 2025
+## Built at LSEG Hackathon 2026
 
 This project was built in ~3 hours at the LSEG Hackathon 2025. The goal: prove that a locally-running LLM could generate useful, stylized architecture diagrams from plain text with zero external API dependencies.
