@@ -112,7 +112,10 @@ def delete_session(session_id: str):
 
 
 # Inițializare bază de date
-init_db()
+try:
+    init_db()
+except Exception as e:
+    st.error(f"Database initialization failed: {e}. History may not be available.")
 
 # =========================
 # UI STYLE
@@ -243,7 +246,11 @@ with st.sidebar:
 
     st.divider()
 
-    sessions = get_all_sessions()
+    try:
+        sessions = get_all_sessions()
+    except Exception as e:
+        st.warning(f"Could not load history: {e}")
+        sessions = []
     for sess in sessions:
         is_active = sess["id"] == st.session_state.current_session_id
         col1, col2 = st.columns([4, 1])
@@ -560,7 +567,17 @@ else:
 
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Eroare Ollama: {e}")
+                        err_str = str(e).lower()
+                        if "connection refused" in err_str or "connect" in err_str:
+                            st.error(
+                                "Could not connect to Ollama. Make sure it's running: `ollama serve`"
+                            )
+                        elif "not found" in err_str or "does not exist" in err_str:
+                            st.error(
+                                f"Model not loaded. Run: `ollama pull {MODEL_NAME}`"
+                            )
+                        else:
+                            st.error(f"Ollama error: {e}")
 
     with col_editor:
         st.subheader("✏️ Editor Live & Preview")
